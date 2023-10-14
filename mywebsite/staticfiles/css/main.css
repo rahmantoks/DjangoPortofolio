@@ -1,0 +1,33 @@
+body {
+	background-color:#F8F8F8!important;
+}
+
+#profile-wrapper{
+	text-align: center;
+}
+
+#profile-pic{
+	width: 150px;
+	height: auto;
+	border-radius: 50%;
+	margin-left: auto;
+  	margin-right: auto;
+    /* Magic! */
+    max-width: 50vw;
+}
+
+.social-links ul, li{
+	list-style-type:none;
+	display: inline-block;
+}
+
+.social{
+	display: block;
+	margin-left: auto;
+	margin-right: auto;
+	width: 50%;
+}
+
+.navbar {
+	background-color: #F8F8F8!important;
+}
