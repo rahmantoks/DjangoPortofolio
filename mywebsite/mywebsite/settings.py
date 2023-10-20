@@ -21,13 +21,12 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/4.2/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-$0ut%mnktwa&1m!k&mo@&4&+u)_qjf3rfgi-(a(7-m@um*4p0e'
+SECRET_KEY = os.environ["DJANGO_SECRET_KEY"]
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = False
 
-ALLOWED_HOSTS = []
-
+ALLOWED_HOSTS = ['rahmantoks.com']
 
 # Application definition
 
@@ -77,8 +76,14 @@ WSGI_APPLICATION = 'mywebsite.wsgi.application'
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+        # 'ENGINE': 'django.db.backends.sqlite3',
+        # 'NAME': BASE_DIR / 'db.sqlite3',
+        'ENGINE': 'django.db.backends.postgresql_psycopg2',
+        'NAME': 'djangodb',
+        'USER': os.environ["DJANGO_POSTGRES_USER"],
+        'PASSWORD': os.environ["DJANGO_POSTGRES_PASSWORD"],
+        'HOST': 'localhost',
+        'PORT': '',
     }
 }
 
@@ -117,8 +122,8 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/4.2/howto/static-files/
 
-STATIC_URL = '/staticfiles/'
-MEDIA_URL = '/images/'
+STATIC_URL = 'staticfiles/'
+MEDIA_URL = 'images/'
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/4.2/ref/settings/#default-auto-field
@@ -126,5 +131,6 @@ MEDIA_URL = '/images/'
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 STATICFILES_DIRS = [
-    os.path.join(BASE_DIR, 'staticfiles')
+    BASE_DIR / "static",
+    BASE_DIR / "staticfiles",
 ]
