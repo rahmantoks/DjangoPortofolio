@@ -80,8 +80,8 @@ DATABASES = {
         # 'NAME': BASE_DIR / 'db.sqlite3',
         'ENGINE': 'django.db.backends.postgresql_psycopg2',
         'NAME': 'djangodb',
-        'USER': os.environ["DJANGO_POSTGRES_USER"],
-        'PASSWORD': os.environ["DJANGO_POSTGRES_PASSWORD"],
+        'USER': 'djangouser',
+        'PASSWORD': os.environ["DJANGO_POSTGRESQL_PASSWORD"],
         'HOST': 'localhost',
         'PORT': '',
     }
