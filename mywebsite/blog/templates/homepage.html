@@ -7,9 +7,9 @@
         <p>Welcome to my blog!</p>
     </div>
 </div>
-<div class="container">
+<div class="container" style="width: 800px;">
 {% for obj in object_list %}
-<div class="card">
+<div class="card shadow p-5">
     <div class="card-body">
         <h5 class="card-title">{{obj.title}}</h5>
         <p class="card-text">{{obj.overview}}</p>
