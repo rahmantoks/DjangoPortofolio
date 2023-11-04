@@ -37,6 +37,9 @@ if os.environ.get("DEBUG") == "False":
         'PORT': '',
         }   
     }
+    CSRF_COOKIE_SECURE=True
+    SESSION_COOKIE_SECURE=True
+    SECURE_SSL_REDIRECT=True
 else:
     DEBUG = True
     ALLOWED_HOSTS = ['192.168.10.109']
@@ -46,8 +49,10 @@ else:
         'NAME': BASE_DIR / 'db.sqlite3',
         }
     }
+    CSRF_COOKIE_SECURE=False
+    SESSION_COOKIE_SECURE=False
+    SECURE_SSL_REDIRECT=False
 # Application definition
-
 INSTALLED_APPS = [
     'django.contrib.admin',
     'django.contrib.auth',
@@ -89,13 +94,6 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'mywebsite.wsgi.application'
 
-
-# Database
-# https://docs.djangoproject.com/en/4.2/ref/settings/#databases
-
-
-
-
 # Password validation
 # https://docs.djangoproject.com/en/4.2/ref/settings/#auth-password-validators
 
@@ -131,7 +129,7 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/4.2/howto/static-files/
 
 STATIC_URL = 'static/'
-MEDIA_URL = 'images/'
+MEDIA_URL = 'media/'
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/4.2/ref/settings/#default-auto-field
@@ -139,6 +137,7 @@ MEDIA_URL = 'images/'
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 STATIC_ROOT = "/var/www/static"
+MEDIA_ROOT = "/var/www/media"
 
 STATICFILES_DIRS = [
     os.path.join(BASE_DIR, "static"), 
