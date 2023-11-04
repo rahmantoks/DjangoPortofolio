@@ -11,6 +11,7 @@
     <div class="card shadow p-5">
         <div class="card-body">
             <h1 class="card-title">{{post.title}}</h5>
+            <p class="pub_date" style="font-size: smaller; color: grey;">{{ post.timestamp | date:"D d M Y" }}, by {{ post.author }}</p>
             <p class="card-text">{{post.overview | safe}}</p>
             <input type="button" class="btn btn-primary" value="Go back!" onclick="history.back()">
         </div>
