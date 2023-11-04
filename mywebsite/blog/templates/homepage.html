@@ -13,7 +13,7 @@
     <div class="card-body">
         <h1 class="card-title">{{obj.title}}</h1>
         <p class="pub_date" style="font-size: smaller; color: grey;">{{ obj.timestamp | date:"D d M Y" }}, by {{ obj.author }}</p>
-        <p class="card-text">{{obj.overview | safe}}</p>
+        <p class="card-text">{{obj.short | safe}}</p>
         <a href="post/{{obj.slug}}" class="btn btn-primary">Read more</a>
     </div>
 </div>
