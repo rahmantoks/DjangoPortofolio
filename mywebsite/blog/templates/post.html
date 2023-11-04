@@ -1,12 +1,19 @@
 {% extends 'base.html' %}
+{% load markdown_extras %}
 
 {% block content %}
-<br>
 <div class="container">
-    <div class="card">
+    <div class="section-title text-center">
+        <h2>My Blog</h2>
+        <p>Welcome to my blog!</p>
+    </div>
+</div>
+<div class="container">
+    <div class="card shadow p-5">
         <div class="card-body">
-            <h5 class="card-title">{{post.title}}</h5>
-            <p class="card-text">{{post.overview}}</p>
+            <h1 class="card-title">{{post.title}}</h5>
+            <p class="card-text">{{post.overview | markdown | safe}}</p>
+            <input type="button" class="btn btn-primary" value="Go back!" onclick="history.back()">
         </div>
     </div>
 </div>
