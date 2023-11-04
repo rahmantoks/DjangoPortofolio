@@ -1,14 +1,13 @@
 {% extends 'base.html' %}
-{% load markdown_extras %}
 
 {% block content %}
 <br>
-<div class="container">
+<div class="container" style="width: 800px;">
 {% for post in posts %}
 <div class="card shadow p-5">
     <div class="card-body">
         <h1 class="card-title">{{post.title}}</h5>
-        <p class="card-text">{{post.overview | markdown | safe}}</p>
+        <p class="card-text">{{post.overview | safe}}</p>
         <a href="../post/{{post.slug}}" class="btn btn-primary">Read more</a>
     </div>
 </div>

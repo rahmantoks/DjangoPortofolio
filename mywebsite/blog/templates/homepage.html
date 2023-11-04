@@ -1,5 +1,4 @@
 {% extends 'base.html' %}
-{% load markdown_extras %}
 
 {% block content %}
 <div class="container">
@@ -13,7 +12,7 @@
 <div class="card shadow p-5">
     <div class="card-body">
         <h1 class="card-title">{{obj.title}}</h5>
-        <p class="card-text">{{obj.overview | markdown | safe}}</p>
+        <p class="card-text">{{obj.overview | safe}}</p>
         <a href="post/{{obj.slug}}" class="btn btn-primary">Read more</a>
     </div>
 </div>

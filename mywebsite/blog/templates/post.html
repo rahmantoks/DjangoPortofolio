@@ -1,5 +1,4 @@
 {% extends 'base.html' %}
-{% load markdown_extras %}
 
 {% block content %}
 <div class="container">
@@ -8,11 +7,11 @@
         <p>Welcome to my blog!</p>
     </div>
 </div>
-<div class="container">
+<div class="container" style="width: 800px;">
     <div class="card shadow p-5">
         <div class="card-body">
             <h1 class="card-title">{{post.title}}</h5>
-            <p class="card-text">{{post.overview | markdown | safe}}</p>
+            <p class="card-text">{{post.overview | safe}}</p>
             <input type="button" class="btn btn-primary" value="Go back!" onclick="history.back()">
         </div>
     </div>
