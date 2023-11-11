@@ -1,6 +1,6 @@
 from django.contrib import admin
 from .models import Author, Category, Post, Tag, Language
-from gallery.models import Image
+from gallery.models import Image, ImageTag
 from django_summernote.admin import SummernoteModelAdmin
 
 class PostAdmin(SummernoteModelAdmin):
@@ -16,3 +16,4 @@ admin.site.register(Post, PostAdmin)
 admin.site.register(Tag)
 admin.site.register(Language)
 admin.site.register(Image)
+admin.site.register(ImageTag)

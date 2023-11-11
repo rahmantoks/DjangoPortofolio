@@ -10,8 +10,8 @@
         <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-T3c6CoIi6uLrA9TneNEoa7RxnatzjcDSCmG1MXxSR1GAsXEV/Dwwykc2MPK8M2HN" crossorigin="anonymous">
         <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js" integrity="sha384-C6RzsynM9kWDrMNeT87bh95OGNyZPhcTNXj1NW7RuBCsyN/o0jlpcV8Qyq46cDfL" crossorigin="anonymous"></script>
         <link href="{% static 'css/gallery.css' %}" rel="stylesheet" type="text/css">
+        <link href="{% static 'css/main.css' %}" rel="stylesheet" type="text/css">
         <script src="{% static 'js/gallery.js' %}"></script>
-        <script src="https://cdn.jsdelivr.net/npm/bs5-lightbox@1.8.3/dist/index.bundle.min.js"></script>
     </head>
     <body>
         <nav class="navbar sticky-top shadow-sm">
@@ -19,6 +19,7 @@
                 <button class="navbar-toggler" type="button" data-bs-toggle="offcanvas" data-bs-target="#offcanvasNavbar" aria-controls="offcanvasNavbar">
                 <span class="navbar-toggler-icon"></span>
                 </button>
+                <h2 style=" position: absolute; top: 50%; left: 50%; transform: translate(-50%,-50%);">Gallery</h2>
                 <div class="offcanvas offcanvas-start" tabindex="-1" id="offcanvasNavbar" aria-labelledby="offcanvasNavbarLabel">
                 <div class="offcanvas-header">
                     <h5 class="offcanvas-title" id="offcanvasNavbarLabel">Navigation</h5>
@@ -51,31 +52,30 @@
                 <path d="M5.5 0a.5.5 0 0 1 .5.5v4A1.5 1.5 0 0 1 4.5 6h-4a.5.5 0 0 1 0-1h4a.5.5 0 0 0 .5-.5v-4a.5.5 0 0 1 .5-.5zm5 0a.5.5 0 0 1 .5.5v4a.5.5 0 0 0 .5.5h4a.5.5 0 0 1 0 1h-4A1.5 1.5 0 0 1 10 4.5v-4a.5.5 0 0 1 .5-.5zM0 10.5a.5.5 0 0 1 .5-.5h4A1.5 1.5 0 0 1 6 11.5v4a.5.5 0 0 1-1 0v-4a.5.5 0 0 0-.5-.5h-4a.5.5 0 0 1-.5-.5zm10 1a1.5 1.5 0 0 1 1.5-1.5h4a.5.5 0 0 1 0 1h-4a.5.5 0 0 0-.5.5v4a.5.5 0 0 1-1 0v-4z"/>
             </symbol>
         </svg>
-        <h1 class="text-center mb-0">Bootstrap 5 Lightbox Gallery</h1>
-        <p class="text-center mb-4">Click an image to reveal the lightbox</p>
-          
-        <section class="photo-gallery">
-            <div class="container">
-                <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4 gallery-grid">
-                    {% block content %}
-                    {% for img in image_list %}
-                    <div class="col">
-                        <a class="gallery-item" href="{{img.image.url}}">
-                            <img src="{{img.image.url}}" class="img-fluid" alt="Lorem ipsum dolor sit amet">
-                        </a>
-                    </div>
-                    {% endfor %}
-                    {% endblock content %}
+        <!-- <h1 class="text-center mb-0"></h1>
+        <p class="text-center mb-4">Click an image to enlarge</p> -->
+        <br>
+        <br>
+        <div class="container">
+            <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4 gallery-grid">
+                {% block content %}
+                {% for img in image_list %}
+                <div class="col">
+                    <a class="gallery-item" href="{{img.image.url}}">
+                        <img src="{{img.image.url}}" class="img-fluid" alt="{{img.caption}}">
+                    </a>
                 </div>
+                {% endfor %}
+                {% endblock content %}
             </div>
-        </section>
-          
+        </div>
+        
         <footer id="copyright" class="mt-5 text-center">
             <div class="container">
                 <div class="row">
                     <div class="col">
                         <p class="mb-0">With <b>Bootstrap 5.3.2</b> and <b>Vanilla JS</b></p>
-                        <p class="mb-0">Code made by <a target="_blank" href="https://adorade.ro">Adorade</a>. License <b>MIT</b></p>
+                        <p class="mb-0">Original code by <a target="_blank" href="https://adorade.ro">Adorade</a>. License <b>MIT</b></p>
                     </div>
                 </div>
             </div>

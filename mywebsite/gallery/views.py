@@ -3,7 +3,8 @@ from .models import Image
 
 # Create your views here.
 def gallery(request):
-    images = Image.objects.all()
+    images = Image.objects.order_by('-upload_date')
+
     context = {
         'image_list' : images,
     }
