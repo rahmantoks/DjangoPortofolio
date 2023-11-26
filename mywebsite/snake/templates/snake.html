@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Snake Game</title>
+    <style>
+        canvas {
+            border: 1px solid #000;
+        }
+    </style>
+</head>
+<body>
+    <canvas id="snakeCanvas" width="400" height="400"></canvas>
+
+    <script>
+        const socket = new WebSocket('ws://192.168.10.109/ws/snake/');
+        const canvas = document.getElementById("snakeCanvas");
+        const ctx = canvas.getContext("2d");
+        const gridSize = 20;
+        
+        socket.onopen = () => {
+            console.log("WebSocket connection opened.");
+        };
+
+        socket.onmessage = (event) => {
+            const data = JSON.parse(event.data);
+            console.log("Received:", data);
+            drawGame(data);
+        };
+
+        document.addEventListener("keydown", (event) => {
+            socket.send(JSON.stringify({ key: event.key }));
+        });
+
+        function drawGame(data) {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            // Draw the snake
+            ctx.fillStyle = "green";
+            data.snake.forEach(segment => {
+                ctx.fillRect(segment[0], segment[1], gridSize, gridSize);
+            });
+
+            // Draw the food
+            ctx.fillStyle = "red";
+            ctx.fillRect(data.food[0], data.food[1], gridSize, gridSize);
+        }
+
+    </script>
+</body>
+</html>
