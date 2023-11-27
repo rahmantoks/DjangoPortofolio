@@ -92,7 +92,6 @@ class SnakeConsumer(AsyncWebsocketConsumer):
             # Cancel the game loop task when the client disconnects
             if not SnakeConsumer.games[self.room_name]['clients']:
                 # If no clients left, remove the game session
-                self.game_loop_task.cancel()
                 del SnakeConsumer.games[self.room_name]
             else:
                 # If clients remain, update their game state
