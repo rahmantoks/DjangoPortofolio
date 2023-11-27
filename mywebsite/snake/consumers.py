@@ -85,20 +85,22 @@ class SnakeConsumer(AsyncWebsocketConsumer):
                 self.room_group_name,
                 self.channel_name
             )
+            
+            # Remove the client from the game session
+            del SnakeConsumer.games[self.room_name]['clients'][self.channel_name]
+
+            # Cancel the game loop task when the client disconnects
+            if not SnakeConsumer.games[self.room_name]['clients']:
+                # If no clients left, remove the game session
+                self.game_loop_task.cancel()
+                del SnakeConsumer.games[self.room_name]
+            else:
+                # If clients remain, update their game state
+                await self.send_game_state()
         except:
             pass
 
-        # Remove the client from the game session
-        del SnakeConsumer.games[self.room_name]['clients'][self.channel_name]
 
-        # Cancel the game loop task when the client disconnects
-        if not SnakeConsumer.games[self.room_name]['clients']:
-            # If no clients left, remove the game session
-            self.game_loop_task.cancel()
-            del SnakeConsumer.games[self.room_name]
-        else:
-            # If clients remain, update their game state
-            await self.send_game_state()
 
     async def handle_keypress(self, key):
         direction = SnakeConsumer.games[self.room_name]['clients'][self.channel_name]['direction']
