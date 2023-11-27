@@ -4,36 +4,46 @@ from channels.generic.websocket import AsyncWebsocketConsumer
 from asgiref.sync import async_to_sync
 import asyncio
 
+ROOM = "perkenyi"
+GRID_SIZE = 20
+CANVAS_HEIGHT = 600
+CANVAS_WIDTH = 1000
+HEIGHT = CANVAS_HEIGHT/GRID_SIZE - 1
+WIDTH = CANVAS_WIDTH/GRID_SIZE - 1
+
 class SnakeConsumer(AsyncWebsocketConsumer):
-    games = {}
+    games = {}  # Dictionary to store game state
+    game_loop_task = None  # Keep track of the game loop taskames = {}
+
     async def connect(self):
-        self.room_name = "snake_game"
-        self.room_group_name = f"snake_game_{self.room_name}"       
-        
+        await self.accept()
+    
+    async def init(self):
+        self.room_group_name = f"snake_game_{self.room_name}"
         # Add the user to the room's group
         await self.channel_layer.group_add(
             self.room_group_name,
             self.channel_name
         )
-        
-        await self.accept()
-        
+
         # Check if the game session already exists
         if self.room_name not in SnakeConsumer.games:
             SnakeConsumer.games[self.room_name] = {
                 'clients': {},
-                'food': (random.randint(0, 19) * 20, random.randint(0, 19) * 20),
+                'food': (random.randint(0, HEIGHT) * GRID_SIZE, random.randint(0, WIDTH) * GRID_SIZE),
             }
 
-            # Start game loop
-            self.game_loop_task = asyncio.create_task(self.move_snake())
-
+            # Start the game loop only once when the first client connects
+            if not SnakeConsumer.game_loop_task:
+                SnakeConsumer.game_loop_task = asyncio.create_task(self.move_snake())
+        
         # Add the client to the game session with its own snake
-        starting_x = 20
-        starting_y = random.randint(0, 29) * 20
+        starting_x = GRID_SIZE
+        starting_y = random.randint(0, HEIGHT) * GRID_SIZE
 
         # Add the client to the game session with its own snake
         SnakeConsumer.games[self.room_name]['clients'][self.channel_name] = {
+            'username': self.username,
             'snake': [(starting_x, starting_y)],
             'direction': "right",
         }
@@ -41,14 +51,42 @@ class SnakeConsumer(AsyncWebsocketConsumer):
         # Send initial game state to the client
         await self.send_game_state()
 
+    async def receive(self, text_data):
+        data = json.loads(text_data) 
+        if data.get('type') == 'set_room_name':
+            room_name = data.get('room_name')
+            # Check if the provided room name is valid
+            if room_name != ROOM:
+                # Reject the connection for an invalid room name
+                await self.close()
+                return
+            else:
+                self.room_name = room_name
+                # Prompt the user for a username
+                await self.send(text_data=json.dumps({
+                    'type': 'get_username',
+                }))
 
+        elif data.get('type') == 'set_username':
+            self.username = data.get('username')
+            await self.init()
+
+        elif data.get('type') == 'key_press':
+            # Handle key press from the client
+            key = data.get('key')
+            # Process the key press as needed
+            if key:
+                await self.handle_keypress(key)
 
     async def disconnect(self, close_code):
         # Remove the user from the room's group
-        await self.channel_layer.group_discard(
-            self.room_group_name,
-            self.channel_name
-        )
+        try:
+            await self.channel_layer.group_discard(
+                self.room_group_name,
+                self.channel_name
+            )
+        except:
+            pass
 
         # Remove the client from the game session
         del SnakeConsumer.games[self.room_name]['clients'][self.channel_name]
@@ -56,29 +94,25 @@ class SnakeConsumer(AsyncWebsocketConsumer):
         # Cancel the game loop task when the client disconnects
         if not SnakeConsumer.games[self.room_name]['clients']:
             # If no clients left, remove the game session
+            self.game_loop_task.cancel()
             del SnakeConsumer.games[self.room_name]
         else:
             # If clients remain, update their game state
             await self.send_game_state()
 
-        self.game_loop_task.cancel()
-
-    async def receive(self, text_data):
-        data = json.loads(text_data)
-        key = data.get("key")
-
-        if key:
-            await self.handle_keypress(key)
-
     async def handle_keypress(self, key):
-        if key == "w" and SnakeConsumer.games[self.room_name]['clients'][self.channel_name]['direction'] != "down":
-            SnakeConsumer.games[self.room_name]['clients'][self.channel_name]['direction'] = "up"
-        elif key == "s" and SnakeConsumer.games[self.room_name]['clients'][self.channel_name]['direction'] != "up":
-            SnakeConsumer.games[self.room_name]['clients'][self.channel_name]['direction'] = "down"
-        elif key == "a" and SnakeConsumer.games[self.room_name]['clients'][self.channel_name]['direction'] != "right":
-            SnakeConsumer.games[self.room_name]['clients'][self.channel_name]['direction'] = "left"
-        elif key == "d" and SnakeConsumer.games[self.room_name]['clients'][self.channel_name]['direction'] != "left":
-            SnakeConsumer.games[self.room_name]['clients'][self.channel_name]['direction'] = "right"
+        direction = SnakeConsumer.games[self.room_name]['clients'][self.channel_name]['direction']
+
+        if key == "w" and direction != "down":
+            direction = "up"
+        elif key == "s" and direction != "up":
+            direction = "down"
+        elif key == "a" and direction != "right":
+            direction = "left"
+        elif key == "d" and direction != "left":
+            direction = "right"
+
+        SnakeConsumer.games[self.room_name]['clients'][self.channel_name]['direction'] = direction
 
     async def send_game_state(self):
         # Send game state to the group
@@ -97,7 +131,7 @@ class SnakeConsumer(AsyncWebsocketConsumer):
             'clients': event['clients'],
             'food': event['food'],
         }))
-        
+
     async def move_snake(self):
         try:
             while True:
@@ -105,42 +139,44 @@ class SnakeConsumer(AsyncWebsocketConsumer):
                 # Update the state for each client's snake
                 for client_channel, client_data in SnakeConsumer.games[self.room_name]['clients'].items():
                     snake = client_data['snake']
+                    username = client_data['username']
                     direction = client_data['direction']
                     food = SnakeConsumer.games[self.room_name]['food']
 
                     head_x, head_y = snake[0]
                     if direction == "up":
-                        head_y -= 20
+                        head_y -= GRID_SIZE
                     elif direction == "down":
-                        head_y += 20
+                        head_y += GRID_SIZE
                     elif direction == "left":
-                        head_x -= 20
+                        head_x -= GRID_SIZE
                     elif direction == "right":
-                        head_x += 20
+                        head_x += GRID_SIZE
 
                     snake.insert(0, (head_x, head_y))
 
                     # Check for collisions
                     if (
                         head_x < 0
-                        or head_x >= 600
+                        or head_x >= CANVAS_WIDTH
                         or head_y < 0
-                        or head_y >= 600
+                        or head_y >= CANVAS_HEIGHT
                     ):
-                        snake = [(20,20)]
-                        snake.insert(0,(20, random.randint(0, 29) * 20))
+                        snake = [(GRID_SIZE,GRID_SIZE)]
+                        snake.insert(0,(GRID_SIZE, random.randint(0, HEIGHT) * GRID_SIZE))
 
                     # Check if the snake eats the food
                     # Check for collisions with food
                     if head_x == food[0] and head_y == food[1]:
-                        SnakeConsumer.games[self.room_name]['food'] = (random.randint(0, 29) * 20, random.randint(0, 29) * 20)
+                        SnakeConsumer.games[self.room_name]['food'] = (random.randint(0, WIDTH) * GRID_SIZE, random.randint(0, HEIGHT) * GRID_SIZE)
                     else:
                         snake.pop()
 
                     # Update the client's snake in the game state
-                    SnakeConsumer.games[self.room_name]['clients'][client_channel]['snake'] = snake    
+                    SnakeConsumer.games[self.room_name]['clients'][client_channel]['snake'] = snake
 
                 await self.send_game_state()
 
         except asyncio.CancelledError:
             pass
+

@@ -11,19 +11,19 @@
     </style>
 </head>
 <body>
-    <canvas id="snakeCanvas" width="600" height="600" style="margin: auto;"></canvas>
+    <canvas id="snakeCanvas" width="1000" height="600" style="margin: auto;"></canvas>
     <script>
         const canvas = document.getElementById("snakeCanvas");
         const ctx = canvas.getContext("2d");
         const gridSize = 20;
-        
         let socket;
 
         if (window.location.hostname == "rahmantoks.com"){
-            socket = new WebSocket('wss://rahmantoks.com/ws/snake/');
+                socket = new WebSocket('wss://rahmantoks.com/ws/snake/');
         } else {
             socket = new WebSocket('ws://' + window.location.hostname + '/ws/snake/');
         }
+
         socket.onopen = () => {
             console.log("WebSocket connection opened.");
         };
@@ -31,12 +31,35 @@
         socket.onmessage = (event) => {
             const data = JSON.parse(event.data);
             console.log("Received:", data);
-            drawGame(data);
-        };
+                if (data.type == "get_username"){
+                    promptUser();
+                }else{
+                    drawGame(data);
+                };
+        }
 
         document.addEventListener("keydown", (event) => {
-            socket.send(JSON.stringify({ key: event.key }));
+            socket.send(JSON.stringify({
+                type: 'key_press',
+                key: event.key,
+            }));
         });
+
+        function promptUser(){
+            var user = prompt("enter username:");
+            socket.send(JSON.stringify({
+                type: 'set_username',
+                username: user,
+            }))
+        }
+
+        function promptRoom(){
+            var room = prompt("enter room name:");
+            socket.send(JSON.stringify({
+                type: 'set_room_name',
+                room_name: room,
+            }))
+        }
 
         function drawGame(data) {
             ctx.clearRect(0, 0, canvas.width, canvas.height);
@@ -47,12 +70,20 @@
                 client.snake.forEach(segment => {
                     ctx.fillRect(segment[0], segment[1], gridSize, gridSize);
                 });
+
+                // Draw the username next to the snake
+                ctx.fillStyle = "black";
+                ctx.font = "16px Arial";
+                ctx.fillText(client.username, client.snake[0][0], client.snake[0][1] - 5);
             });
 
             // Draw the food
             ctx.fillStyle = "red";
             ctx.fillRect(data.food[0], data.food[1], gridSize, gridSize);
+
+
         }
+        socket.onopen = () => promptRoom();
     </script>
 </body>
 </html>
