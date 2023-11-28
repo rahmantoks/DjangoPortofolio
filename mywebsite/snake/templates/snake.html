@@ -11,7 +11,7 @@
     </style>
 </head>
 <body>
-    <canvas id="snakeCanvas" width="1000" height="600" style="margin: auto;"></canvas>
+    <canvas id="snakeCanvas" width="800" height="600" style="margin: auto;"></canvas>
     <script>
         const canvas = document.getElementById("snakeCanvas");
         const ctx = canvas.getContext("2d");
@@ -74,15 +74,28 @@
                 // Draw the username next to the snake
                 ctx.fillStyle = "black";
                 ctx.font = "16px Arial";
-                ctx.fillText(client.username, client.snake[0][0], client.snake[0][1] - 5);
+
+                var pos_x;
+                var pos_y;
+
+                if (client.direction == "down"){
+                    pos_x = client.snake[0][0] + gridSize + 5;
+                    pos_y = client.snake[0][1] + gridSize;
+                } else if(client.direction == "up") {
+                    pos_x = client.snake[0][0] + gridSize + 5;
+                    pos_y = client.snake[0][1] + gridSize - 10;
+                } else {
+                    pos_x = client.snake[0][0];
+                    pos_y = client.snake[0][1] - 5;
+                }
+                ctx.fillText(client.username, pos_x, pos_y);
             });
 
             // Draw the food
             ctx.fillStyle = "red";
             ctx.fillRect(data.food[0], data.food[1], gridSize, gridSize);
-
-
         }
+
         socket.onopen = () => promptRoom();
     </script>
 </body>
