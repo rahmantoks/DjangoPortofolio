@@ -17,6 +17,7 @@
         const ctx = canvas.getContext("2d");
         const gridSize = 20;
         let socket;
+        let user;
 
         if (window.location.hostname == "rahmantoks.com"){
                 socket = new WebSocket('wss://rahmantoks.com/ws/snake/');
@@ -34,7 +35,9 @@
                 if (data.type == "get_username"){
                     promptUser();
                 }else if(data.type == "game_over"){
-                    alert(data.message);
+                    if (data.username == user){
+                        alert(data.message);
+                    }
                 }else{
                     drawGame(data);
                 };
@@ -48,7 +51,7 @@
         });
 
         function promptUser(){
-            var user = prompt("enter username:");
+            user = prompt("enter username:");
             socket.send(JSON.stringify({
                 type: 'set_username',
                 username: user,

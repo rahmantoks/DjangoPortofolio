@@ -159,6 +159,7 @@ class SnakeConsumer(AsyncWebsocketConsumer):
                         # Send game over message
                         await self.send(text_data=json.dumps({
                             'type': 'game_over',
+                            'username': username,
                             'message': collision
                         }))
 
