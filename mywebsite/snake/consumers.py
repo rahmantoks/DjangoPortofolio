@@ -30,7 +30,7 @@ class SnakeConsumer(AsyncWebsocketConsumer):
         if self.room_name not in SnakeConsumer.games:
             SnakeConsumer.games[self.room_name] = {
                 'clients': {},
-                'food': (random.randint(0, HEIGHT) * GRID_SIZE, random.randint(0, WIDTH) * GRID_SIZE),
+                'food': (random.randint(0, WIDTH) * GRID_SIZE, random.randint(0, HEIGHT) * GRID_SIZE),
             }
 
             # Start the game loop only once when the first client connects
@@ -85,7 +85,7 @@ class SnakeConsumer(AsyncWebsocketConsumer):
             self.channel_name
         )
 
-        if self.room_name in SnakeConsumer.games:
+        try:
             # Remove the client from the game session
             del SnakeConsumer.games[self.room_name]['clients'][self.channel_name]
 
@@ -96,8 +96,12 @@ class SnakeConsumer(AsyncWebsocketConsumer):
                     SnakeConsumer.game_loop_task = None
                 # If no clients left, remove the game session
                 del SnakeConsumer.games[self.room_name]
+        except:
+            pass
 
-        await self.send_game_state()
+
+        # await self.send_game_state()
+        
 
     async def handle_keypress(self, key):
         direction = SnakeConsumer.games[self.room_name]['clients'][self.channel_name]['direction']
@@ -131,6 +135,25 @@ class SnakeConsumer(AsyncWebsocketConsumer):
             'clients': event['clients'],
             'food': event['food'],
         }))
+    
+    async def send_game_over(self, username, message):
+        # Send game state to the group
+        await self.channel_layer.group_send(
+            self.room_group_name,
+            {
+                'type': 'game_over',
+                'username': username,
+                'message': message
+            }
+        )
+    
+    async def game_over(self, event):
+        # Send game state to WebSocket
+        await self.send(text_data=json.dumps({
+            'type': event['type'],
+            'username': event['username'],
+            'message': event['message'],
+        }))
 
     async def move_snake(self):
         try:
@@ -157,14 +180,7 @@ class SnakeConsumer(AsyncWebsocketConsumer):
                     collision = self.check_collision(head_x, head_y)
                     if collision != 'no_collision':
                         # Send game over message
-                        await self.send(text_data=json.dumps({
-                            'type': 'game_over',
-                            'username': username,
-                            'message': collision
-                        }))
-
-                        # Disconnect player
-                        await self.close(0)
+                        await self.send_game_over(username,collision)
 
                     # Move snake
                     snake.insert(0, (head_x, head_y))

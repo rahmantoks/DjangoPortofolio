@@ -36,6 +36,7 @@
                     promptUser();
                 }else if(data.type == "game_over"){
                     if (data.username == user){
+                        socket.close();
                         alert(data.message);
                     }
                 }else{
