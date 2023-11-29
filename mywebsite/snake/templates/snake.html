@@ -1,108 +1,163 @@
+{% load static %}
+
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Snake Game</title>
-    <style>
-        canvas {
-            border: 1px solid #000;
-        }
-    </style>
-</head>
-<body>
-    <canvas id="snakeCanvas" width="800" height="600" style="margin: auto;"></canvas>
-    <script>
-        const canvas = document.getElementById("snakeCanvas");
-        const ctx = canvas.getContext("2d");
-        const gridSize = 20;
-        let socket;
-        let user;
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <title> Online Snake </title>
+        <link href="{% static 'images/r-square-fill.svg' %}" rel="icon" type="image/svg+xml">
+        <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-T3c6CoIi6uLrA9TneNEoa7RxnatzjcDSCmG1MXxSR1GAsXEV/Dwwykc2MPK8M2HN" crossorigin="anonymous">
+        <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js" integrity="sha384-C6RzsynM9kWDrMNeT87bh95OGNyZPhcTNXj1NW7RuBCsyN/o0jlpcV8Qyq46cDfL" crossorigin="anonymous"></script>
+        <link href="{% static 'css/main.css' %}" rel="stylesheet" type="text/css">
+    </head>
+    <body>
+        <nav class="navbar sticky-top shadow-sm">
+            <div class="container-fluid">
+                <button class="navbar-toggler" type="button" data-bs-toggle="offcanvas" data-bs-target="#offcanvasNavbar" aria-controls="offcanvasNavbar">
+                <span class="navbar-toggler-icon"></span>
+                </button>
+                <h2 style=" position: absolute; top: 50%; left: 50%; transform: translate(-50%,-50%);">Online Snake Game</h2>
+                <div class="offcanvas offcanvas-start" tabindex="-1" id="offcanvasNavbar" aria-labelledby="offcanvasNavbarLabel">
+                <div class="offcanvas-header">
+                    <h5 class="offcanvas-title" id="offcanvasNavbarLabel">Navigation</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+                </div>
+                <div class="offcanvas-body">
+                    <ul class="navbar-nav justify-content-end flex-grow-1 pe-3">
+                        <li class="nav-item">
+                            <a class="nav-link active" aria-current="page" href="/">About Me</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="/gallery">Gallery</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="#">Projects</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="/blog">Blog</a>
+                        </li>
+                    </ul>
+                </div>
+                </div>
+            </div>
+        </nav>
 
-        if (window.location.hostname == "rahmantoks.com"){
+        <div class="container text-center mt-4 p-4">
+            <canvas class="border border-dark-subtle shadow" id="snakeCanvas" width="800" height="600" style="margin: auto;"></canvas>
+        </div>
+        <div class="container text-center mt-4 p-4">
+            <button id="playButton" class="btn btn-primary btn-lg" onclick="playButton()">Play!</button>
+        </div>
+        <div class="row">
+            <div class="col">
+            </div>
+            <div class="col">
+            </div>
+        </div>
+
+        <script>
+            const canvas = document.getElementById("snakeCanvas");
+            const ctx = canvas.getContext("2d");
+            const gridSize = 20;
+            let socket;
+            let user;
+
+            // Connect to websocket server
+            if (window.location.hostname == "rahmantoks.com"){
                 socket = new WebSocket('wss://rahmantoks.com/ws/snake/');
-        } else {
-            socket = new WebSocket('ws://' + window.location.hostname + '/ws/snake/');
-        }
+            } else {
+                socket = new WebSocket('ws://' + window.location.hostname + '/ws/snake/');
+            }
 
-        socket.onopen = () => {
-            console.log("WebSocket connection opened.");
-        };
+            function playButton() {
+                promptRoom();
+                
+                // Get the button element by its ID
+                var button = document.getElementById("playButton");
+                // Hide the button
+                button.style.display = "none";
+            }
 
-        socket.onmessage = (event) => {
-            const data = JSON.parse(event.data);
-            console.log("Received:", data);
-                if (data.type == "get_username"){
-                    promptUser();
-                }else if(data.type == "game_over"){
-                    if (data.username == user){
-                        socket.close();
-                        alert(data.message);
-                    }
-                }else{
-                    drawGame(data);
-                };
-        }
+            socket.onopen = () => {
+                console.log("WebSocket connection opened.");
+            };
 
-        document.addEventListener("keydown", (event) => {
-            socket.send(JSON.stringify({
-                type: 'key_press',
-                key: event.key,
-            }));
-        });
+            socket.onmessage = (event) => {
+                const data = JSON.parse(event.data);
+                console.log("Received:", data);
+                    if (data.type == "get_username"){
+                        promptUser();
+                    }else if(data.type == "game_over"){
+                        if (data.username == user){
+                            socket.close();
+                            alert(data.message);
+                        }
+                    }else{
+                        drawGame(data);
+                    };
+            }
 
-        function promptUser(){
-            user = prompt("enter username:");
-            socket.send(JSON.stringify({
-                type: 'set_username',
-                username: user,
-            }))
-        }
-
-        function promptRoom(){
-            var room = prompt("enter room name:");
-            socket.send(JSON.stringify({
-                type: 'set_room_name',
-                room_name: room,
-            }))
-        }
-
-        function drawGame(data) {
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-            // Draw each client's snake
-            Object.values(data.clients).forEach((client) => {
-                ctx.fillStyle = "green";
-                client.snake.forEach(segment => {
-                    ctx.fillRect(segment[0], segment[1], gridSize, gridSize);
-                });
-
-                // Draw the username next to the snake
-                ctx.fillStyle = "black";
-                ctx.font = "16px Arial";
-
-                var pos_x;
-                var pos_y;
-
-                if (client.direction == "down"){
-                    pos_x = client.snake[0][0] + gridSize + 5;
-                    pos_y = client.snake[0][1] + gridSize;
-                } else if(client.direction == "up") {
-                    pos_x = client.snake[0][0] + gridSize + 5;
-                    pos_y = client.snake[0][1] + gridSize - 10;
-                } else {
-                    pos_x = client.snake[0][0];
-                    pos_y = client.snake[0][1] - 5;
-                }
-                ctx.fillText(client.username, pos_x, pos_y);
+            document.addEventListener("keydown", (event) => {
+                socket.send(JSON.stringify({
+                    type: 'key_press',
+                    key: event.key,
+                }));
             });
 
-            // Draw the food
-            ctx.fillStyle = "red";
-            ctx.fillRect(data.food[0], data.food[1], gridSize, gridSize);
-        }
+            function promptUser(){
+                user = prompt("enter username:");
+                socket.send(JSON.stringify({
+                    type: 'set_username',
+                    username: user,
+                }))
+            }
 
-        socket.onopen = () => promptRoom();
-    </script>
+            function promptRoom(){
+                var room = prompt("enter room name:");
+                socket.send(JSON.stringify({
+                    type: 'set_room_name',
+                    room_name: room,
+                }))
+            }
+
+            function drawGame(data) {
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+                // Draw each client's snake
+                Object.values(data.clients).forEach((client) => {
+                    ctx.fillStyle = "green";
+                    client.snake.forEach(segment => {
+                        ctx.fillRect(segment[0], segment[1], gridSize, gridSize);
+                    });
+
+                    // Draw the username next to the snake
+                    ctx.fillStyle = "black";
+                    ctx.font = "16px Arial";
+
+                    var pos_x;
+                    var pos_y;
+
+                    if (client.direction == "down"){
+                        pos_x = client.snake[0][0] + gridSize + 5;
+                        pos_y = client.snake[0][1] + gridSize;
+                    } else if(client.direction == "up") {
+                        pos_x = client.snake[0][0] + gridSize + 5;
+                        pos_y = client.snake[0][1] + gridSize - 10;
+                    } else {
+                        pos_x = client.snake[0][0];
+                        pos_y = client.snake[0][1] - 5;
+                    }
+                    ctx.fillText(client.username, pos_x, pos_y);
+                });
+
+                // Draw the food
+                ctx.fillStyle = "red";
+                ctx.fillRect(data.food[0], data.food[1], gridSize, gridSize);
+            }
+
+
+
+        </script>
 </body>
 </html>
