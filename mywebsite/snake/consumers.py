@@ -153,17 +153,20 @@ class SnakeConsumer(AsyncWebsocketConsumer):
                     elif direction == "right":
                         head_x += GRID_SIZE
 
-                    snake.insert(0, (head_x, head_y))
-
                     # Check for collisions
-                    if (
-                        head_x < 0
-                        or head_x >= CANVAS_WIDTH
-                        or head_y < 0
-                        or head_y >= CANVAS_HEIGHT
-                    ):
-                        snake = [(GRID_SIZE,GRID_SIZE)]
-                        snake.insert(0,(GRID_SIZE, random.randint(0, HEIGHT) * GRID_SIZE))
+                    collision = self.check_collision(head_x, head_y)
+                    if collision != 'no_collision':
+                        # Send game over message
+                        await self.send(text_data=json.dumps({
+                            'type': 'game_over',
+                            'message': collision
+                        }))
+
+                        # Disconnect player
+                        await self.close(0)
+
+                    # Move snake
+                    snake.insert(0, (head_x, head_y))
 
                     # Check if the snake eats the food
                     # Check for collisions with food
@@ -180,3 +183,19 @@ class SnakeConsumer(AsyncWebsocketConsumer):
         except asyncio.CancelledError:
             pass
 
+    def check_collision(self, head_x, head_y):
+        # Check for collision with own body
+        if (head_x, head_y) in SnakeConsumer.games[self.room_name]['clients'][self.channel_name]['snake']:
+            return 'self_collision'
+
+        # Check for collision with other players' snakes
+        for client_id, client_data in SnakeConsumer.games[self.room_name]['clients'].items():
+            if client_id != self.channel_name:  # Skip checking collision with the snake itself
+                if (head_x, head_y) in client_data['snake']:
+                    return 'other_snake_collision'
+
+        # Check for collision with game boundaries
+        if head_x < 0 or head_x >= CANVAS_WIDTH or head_y < 0 or head_y >= CANVAS_HEIGHT:
+            return 'boundary_collision'
+
+        return 'no_collision'

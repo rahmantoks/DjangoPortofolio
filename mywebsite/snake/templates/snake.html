@@ -33,6 +33,8 @@
             console.log("Received:", data);
                 if (data.type == "get_username"){
                     promptUser();
+                }else if(data.type == "game_over"){
+                    alert(data.message);
                 }else{
                     drawGame(data);
                 };
