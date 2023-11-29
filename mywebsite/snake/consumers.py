@@ -53,23 +53,24 @@ class SnakeConsumer(AsyncWebsocketConsumer):
 
     async def receive(self, text_data):
         data = json.loads(text_data)
-        if data.get('type') == 'set_room_name':
+        if data.get('type') == 'set_player_info':
             room_name = data.get('room_name')
+            username = data.get('username')
+
             # Check if the provided room name is valid
             if room_name != ROOM:
                 # Reject the connection for an invalid room name
                 await self.close()
                 return
-            else:
-                self.room_name = room_name
-                # Prompt the user for a username
-                await self.send(text_data=json.dumps({
-                    'type': 'get_username',
-                }))
 
-        elif data.get('type') == 'set_username':
+            self.room_name = data.get('room_name') 
             self.username = data.get('username')
+
+            # Game start
             await self.init()
+            await self.send(text_data=json.dumps({
+                'type': 'game_start',
+            }))
 
         elif data.get('type') == 'key_press':
             # Handle key press from the client
@@ -79,11 +80,11 @@ class SnakeConsumer(AsyncWebsocketConsumer):
                 await self.handle_keypress(key)
 
     async def disconnect(self, close_code):
-        # Remove the user from the room's group
-        await self.channel_layer.group_discard(
-            self.room_group_name,
-            self.channel_name
-        )
+        # # Remove the user from the room's group
+        # await self.channel_layer.group_discard(
+        #     self.room_group_name,
+        #     self.channel_name
+        # )
 
         try:
             # Remove the client from the game session
@@ -177,7 +178,7 @@ class SnakeConsumer(AsyncWebsocketConsumer):
                         head_x += GRID_SIZE
 
                     # Check for collisions
-                    collision = self.check_collision(head_x, head_y)
+                    collision = self.check_collision(client_channel,head_x, head_y)
                     if collision != 'no_collision':
                         # Send game over message
                         await self.send_game_over(username,collision)
@@ -200,9 +201,9 @@ class SnakeConsumer(AsyncWebsocketConsumer):
         except asyncio.CancelledError:
             pass
 
-    def check_collision(self, head_x, head_y):
+    def check_collision(self, client_channel, head_x, head_y):
         # Check for collision with own body
-        if (head_x, head_y) in SnakeConsumer.games[self.room_name]['clients'][self.channel_name]['snake']:
+        if (head_x, head_y) in SnakeConsumer.games[self.room_name]['clients'][client_channel]['snake']:
             return 'self_collision'
 
         # Check for collision with other players' snakes
