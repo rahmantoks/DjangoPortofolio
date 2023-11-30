@@ -9,6 +9,7 @@
         <link href="{% static 'images/r-square-fill.svg' %}" rel="icon" type="image/svg+xml">
         <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-T3c6CoIi6uLrA9TneNEoa7RxnatzjcDSCmG1MXxSR1GAsXEV/Dwwykc2MPK8M2HN" crossorigin="anonymous">
         <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js" integrity="sha384-C6RzsynM9kWDrMNeT87bh95OGNyZPhcTNXj1NW7RuBCsyN/o0jlpcV8Qyq46cDfL" crossorigin="anonymous"></script>
+        <script src="https://code.jquery.com/jquery-3.7.1.min.js" integrity="sha256-/JqT3SQfawRcv/BIHPThkBvs0OEvtFFmqPF/lYI/Cxo=" crossorigin="anonymous"></script>
         <link href="{% static 'css/main.css' %}" rel="stylesheet" type="text/css">
     </head>
     <body>
@@ -49,11 +50,9 @@
                         <form>
                             <div class="mb-3">
                                 <label for="roomName" class="col-form-label">Enter room name:</label>
-                                <input type="text" class="form-control" id="roomName">
+                                <input type="text" class="form-control" id="roomName" autofocus>
                             </div>
                         </form>
-                    </div>
-                    <div class="modal-footer">
                         <button id="promptRoomOk" type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#promptUserModal">Enter</button>
                         <button id="promptRoomClose" type="button" class="btn btn-secondary" data-bs-dismiss="modal" hidden>Close</button>
                     </div>
@@ -67,11 +66,9 @@
                         <form>
                             <div class="mb-3">
                                 <label for="userName" class="col-form-label">Enter username:</label>
-                                <input type="text" class="form-control" id="userName">
+                                <input type="text" class="form-control" id="userName" autofocus>
                             </div>
                         </form>
-                    </div>
-                    <div class="modal-footer">
                         <button id="promptUserOk" type="button" class="btn btn-primary" onclick="promptUserButton()">Enter</button>
                         <button id="promptUserClose" type="button" class="btn btn-secondary" data-bs-dismiss="modal" hidden>Close</button>
                     </div>
@@ -87,7 +84,6 @@
         </div>
         <script>
             const canvas = document.getElementById("snakeCanvas");
-            const promptModal = document.getElementById('promptModal')
             const ctx = canvas.getContext("2d");
             const gridSize = 20;
             let socket;
@@ -95,7 +91,7 @@
             let room;
             let data;
             let start = false;
-            let current_state;
+            let currentState;
 
             // Connect to websocket server
             if (window.location.hostname == "rahmantoks.com"){
@@ -133,8 +129,8 @@
                         alert(data.message);
                     }
                 } else {
-                    current_state = data
-                    drawGame(data);
+                    currentState = data;
+                    //drawGame(data);
                 };
             }
 
@@ -149,7 +145,7 @@
 
             function drawGame(data) {
                 ctx.clearRect(0, 0, canvas.width, canvas.height);
-
+                console.log(data);
                 // Draw each client's snake
                 Object.values(data.clients).forEach((client) => {
                     ctx.fillStyle = "green";
@@ -181,19 +177,41 @@
                 ctx.fillStyle = "red";
                 ctx.fillRect(data.food[0], data.food[1], gridSize, gridSize);
             }
-                
+            
             // Function to update and render the game state
             function updateAndRender() {
                 // In a real scenario, this is where you would receive the game state from the server
                 // and update the currentGameState variable accordingly.
-                // const currentGameState = { ...initialGameState };  // Simulated update
-
-                // Draw the current game state
-                drawGame(current_state);
+                // const currentGameState = {...initialGameS tate };  // Simulated update
+                if(currentState != undefined){
+                    // Draw the current game state
+                    drawGame(currentState);    
+                }
 
                 // Request the next animation frame
                 requestAnimationFrame(updateAndRender);
             }
+
+            $(document).ready(function(){
+                $("#promptRoomModal").on('shown.bs.modal', function(){
+                    $(this).find('#roomName').focus();
+                });
+                $("#promptUserModal").on('shown.bs.modal', function(){
+                    $(this).find('#userName').focus();
+                });
+                $('#roomName').keypress(function (e) {
+                    if (e.which == 13) {
+                        $('#promptRoomOk').click();
+                        return false;  
+                    }
+                });
+                $('#userName').keypress(function (e) {
+                    if (e.which == 13) {
+                        $('#promptUserOk').click();
+                        return false;  
+                    }
+                });
+            });
 
         </script>
 </body>
