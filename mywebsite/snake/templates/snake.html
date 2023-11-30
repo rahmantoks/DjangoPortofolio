@@ -42,8 +42,8 @@
                 </div>
             </div>
         </nav>
-        <div class="modal fade" data-bs-backdrop="static" id="promptRoomModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
-            <div class="modal-dialog modal-dialog-centered">
+        <div class="modal fade" id="promptRoomModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered modal-sm">
                 <div class="modal-content">
                     <div class="modal-body">
                         <form>
@@ -60,8 +60,8 @@
                 </div>
             </div>
         </div>
-        <div class="modal fade" data-bs-backdrop="static" id="promptUserModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
-            <div class="modal-dialog modal-dialog-centered" >
+        <div class="modal fade" id="promptUserModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered modal-sm">
                 <div class="modal-content">
                     <div class="modal-body">
                         <form>
@@ -79,7 +79,7 @@
             </div>
         </div>
         <div class="container text-center mt-4 p-4">
-            <canvas class="border border-dark-subtle shadow" id="snakeCanvas" width="800" height="600" style="margin: auto;"></canvas>
+            <canvas class="border border-dark-subtle shadow" id="snakeCanvas" width="800" height="600" style="margin: auto; background-color: white;"></canvas>
         </div>
         <div class="container text-center mt-4 p-4">
             <button id="promptRoom" type="button" class="btn btn-primary btn-lg" data-bs-toggle="modal" data-bs-target="#promptRoomModal">Play!</button>
@@ -95,6 +95,7 @@
             let room;
             let data;
             let start = false;
+            let current_state;
 
             // Connect to websocket server
             if (window.location.hostname == "rahmantoks.com"){
@@ -123,14 +124,16 @@
             socket.onmessage = (event) => {
                 const data = JSON.parse(event.data);
                 console.log("Received:", data);
-                if(data.type == "game_start"){
+                if (data.type == "game_start") {
                     start = true;
-                }else if(data.type == "game_over"){
+                    updateAndRender();
+                } else if (data.type == "game_over") {
                     if (data.username == user){
                         socket.close();
                         alert(data.message);
                     }
-                }else{
+                } else {
+                    current_state = data
                     drawGame(data);
                 };
             }
@@ -177,6 +180,19 @@
                 // Draw the food
                 ctx.fillStyle = "red";
                 ctx.fillRect(data.food[0], data.food[1], gridSize, gridSize);
+            }
+                
+            // Function to update and render the game state
+            function updateAndRender() {
+                // In a real scenario, this is where you would receive the game state from the server
+                // and update the currentGameState variable accordingly.
+                // const currentGameState = { ...initialGameState };  // Simulated update
+
+                // Draw the current game state
+                drawGame(current_state);
+
+                // Request the next animation frame
+                requestAnimationFrame(updateAndRender);
             }
 
         </script>
