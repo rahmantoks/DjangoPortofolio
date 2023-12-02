@@ -6,7 +6,7 @@ from snake.const import *
 
 import asyncio
 
-ROOM = "perkenyi"
+ROOM = {"perkenyi","public"}
 GRID_SIZE = 20
 CANVAS_HEIGHT = 600
 CANVAS_WIDTH = 800
@@ -60,12 +60,12 @@ class SnakeConsumer(AsyncWebsocketConsumer):
             username = data.get('username')
 
             # Check if the provided room name is valid
-            if room_name != ROOM:
+            if not room_name in ROOM:
                 # Reject the connection for an invalid room name
                 await self.close()
                 return
 
-            self.room_name = data.get('room_name') 
+            self.room_name = data.get('room_name')
             self.username = data.get('username')
 
             # Game start
@@ -104,7 +104,6 @@ class SnakeConsumer(AsyncWebsocketConsumer):
 
 
         # await self.send_game_state()
-        
 
     async def handle_keypress(self, key):
         direction = SnakeConsumer.games[self.room_name]['clients'][self.channel_name]['direction']
@@ -138,7 +137,7 @@ class SnakeConsumer(AsyncWebsocketConsumer):
             'clients': event['clients'],
             'food': event['food'],
         }))
-    
+
     async def send_game_over(self, username, message):
         # Send game state to the group
         await self.channel_layer.group_send(
@@ -149,7 +148,7 @@ class SnakeConsumer(AsyncWebsocketConsumer):
                 'message': message
             }
         )
-    
+
     async def game_over(self, event):
         # Send game state to WebSocket
         await self.send(text_data=json.dumps({

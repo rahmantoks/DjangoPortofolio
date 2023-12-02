@@ -13,6 +13,7 @@
         <link href="{% static 'css/main.css' %}" rel="stylesheet" type="text/css">
     </head>
     <body>
+
         <!-- Navbar -->
         <nav class="navbar sticky-top shadow-sm">
             <div class="container-fluid">
@@ -51,9 +52,21 @@
                 <div class="modal-content">
                     <div class="modal-body">
                         <form>
+                            <div class="form-check">
+                              <input class="form-check-input" type="radio" name="roomSelectRadio" id="roomSelectRadio1" onchange="RoomSelected('public')" checked>
+                              <label class="form-check-label" for="roomSelectRadio1">
+                                Join public room
+                              </label>
+                            </div>
+                            or
+                            <div class="form-check">
+                              <input class="form-check-input" type="radio" name="roomSelectRadio" id="roomSelectRadio2" onchange="RoomSelected('private')">
+                              <label class="form-check-label" for="roomSelectRadio2">
+                                Join private room
+                              </label>
+                            </div>
                             <div class="mb-3">
-                                <label for="roomName" class="col-form-label">Enter room name:</label>
-                                <input type="text" class="form-control" id="roomName" autofocus>
+                                <input type="text" class="form-control" id="roomName" placeholder="Enter room name.."disabled>
                             </div>
                         </form>
                         <button id="promptRoomOk" type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#promptUserModal">Enter</button>
@@ -72,7 +85,10 @@
                             <h3 >Game Over</h3>
                             <p id="gameovermessage">Collided</p>
                             <br>
-                            <button id="gameOverExit" type="button" class="btn btn-primary" data-bs-toggle="modal">Exit</button>
+                            <div class="mx-auto">
+                                <button id="gameOverExit" type="button" class="btn btn-primary m-1" data-bs-toggle="modal">Exit</button>
+                                <button id="gameOverPlay" type="button" class="btn btn-primary m-1" data-bs-toggle="modal">Retry!</button>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -99,22 +115,36 @@
 
         <!-- Game canvas  -->
         <div class="container text-center mt-4 p-4">
-            <canvas class="border border-dark-subtle shadow" id="snakeCanvas" width="800" height="600" style="margin: auto; background-color: white;"></canvas>
-        </div>
-        
-        <!-- Buttons below canvas -->
-        <div class="container text-center mt-4 p-4">
-            <button id="promptRoom" type="button" class="btn btn-primary btn-lg" data-bs-toggle="modal" data-bs-target="#promptRoomModal">Play!</button>
-            <button id="restartButton" type="button" class="btn btn-primary btn-lg" data-bs-toggle="modal" data-bs-target="#promptRoomModal" hidden>Restart!</button>
+            <div class="row">
+                <div class="col">
+                </div>
+                <div class="col">
+                    <div class="container mx-auto d-flex align-items-center" style:"width: 800px">
+                        <div class="container" id="instruction" style="width: 800px; position: absolute;">
+                            <h5>Play classic snake together with your friends!</h5>
+                            <p>
+                                Use WASD to control your snake.<br>
+                                Eat food to grow your snake.<br>
+                                Avoid the wall and other players.<br>
+                                Longest snake win!<br>
+                            </p>
+                            <button id="promptRoom" type="button" class="btn btn-primary btn-lg" data-bs-toggle="modal" data-bs-target="#promptRoomModal">Play!</button>
+                        </div>
+                        <canvas id="snakeCanvas" class="border border-dark-subtle shadow" style="background-color: white;" width=800px height=600px></canvas>
+                    </div>
+                </div>
+                <div class="col">
+                </div>
+            </div>
         </div>
 
-
+        <!-- Game script -->
         <script>
             const canvas = document.getElementById("snakeCanvas");
             const ctx = canvas.getContext("2d");
             const gridSize = 20;
             const updateInterval = 100;
-            
+
             let socket;
             let user;
             let room;
@@ -134,8 +164,14 @@
 
             function promptUserButton() {
                 document.getElementById("promptUserClose").click();
-                
-                room = document.getElementById("roomName").value;
+                document.getElementById("instruction").style.display='none';
+
+                if(document.getElementById("roomSelectRadio1").checked){
+                    room = "public";
+                }else{
+                    room = document.getElementById("roomName").value;
+                }
+
                 user = document.getElementById("userName").value;
 
                 socket.send(JSON.stringify({
@@ -158,7 +194,7 @@
                 } else if (data.type == "game_over") {
                     if (data.username == user){
                         socket.close();
-                        cancelAnimationFrame(animationID);     
+                        cancelAnimationFrame(animationID);
                         showGameOver(data.message);
                         //alert(data.message);
                     }
@@ -212,7 +248,7 @@
                 ctx.fillStyle = "red";
                 ctx.fillRect(data.food[0], data.food[1], gridSize, gridSize);
             }
-            
+
             // Function to update and render the game state
             function updateAndRender(currentTime) {
                 // In a real scenario, this is where you would receive the game state from the server
@@ -225,9 +261,9 @@
                         const interpolationFactor = elapsed / updateInterval;
                         interpolateSnakePosition(currentState.clients[i].snake, lastState.clients[i].snake, interpolationFactor);
                     }
-                    
+
                     // Draw the current game state
-                    drawGame(currentState);    
+                    drawGame(currentState);
 
                     lastUpdateTime = currentTime;
                 }
@@ -257,7 +293,18 @@
                 modal.show();
             }
 
+            function RoomSelected(type){
+                if(type=="private"){
+                    document.getElementById("roomName").disabled = false;
+                }else {
+                    document.getElementById("roomName").disabled = true;
+                }
+            }
+
             $(document).ready(function(){
+                $("#gameOverPlay").click(function(){
+                    location.reload();
+                });
                 $("#promptRoomModal").on('shown.bs.modal', function(){
                     $(this).find('#roomName').focus();
                 });
@@ -267,13 +314,13 @@
                 $('#roomName').keypress(function (e) {
                     if (e.which == 13) {
                         $('#promptRoomOk').click();
-                        return false;  
+                        return false;
                     }
                 });
                 $('#userName').keypress(function (e) {
                     if (e.which == 13) {
                         $('#promptUserOk').click();
-                        return false;  
+                        return false;
                     }
                 });
             });
