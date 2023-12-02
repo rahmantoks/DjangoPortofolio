@@ -2,6 +2,8 @@ import json
 import random
 from channels.generic.websocket import AsyncWebsocketConsumer
 from asgiref.sync import async_to_sync
+from snake.const import *
+
 import asyncio
 
 ROOM = "perkenyi"
@@ -179,9 +181,17 @@ class SnakeConsumer(AsyncWebsocketConsumer):
 
                     # Check for collisions
                     collision = self.check_collision(client_channel,head_x, head_y)
-                    if collision != 'no_collision':
+                    if collision != Collisions.NO_COLLISION:
+                        message = ""
                         # Send game over message
-                        await self.send_game_over(username,collision)
+                        if collision == Collisions.SELF_COLLISION:
+                            message = "You collided with your self!"
+                        elif collision == Collisions.OTHER_COLLISION:
+                            message = "You collided with other snake!"
+                        elif collision == Collisions.BOUNDARY_COLLISION:
+                            message = "You collided with the wall!"
+
+                        await self.send_game_over(username,message)
 
                     # Move snake
                     snake.insert(0, (head_x, head_y))
@@ -204,16 +214,16 @@ class SnakeConsumer(AsyncWebsocketConsumer):
     def check_collision(self, client_channel, head_x, head_y):
         # Check for collision with own body
         if (head_x, head_y) in SnakeConsumer.games[self.room_name]['clients'][client_channel]['snake']:
-            return 'self_collision'
+            return Collisions.SELF_COLLISION
 
         # Check for collision with other players' snakes
         for client_id, client_data in SnakeConsumer.games[self.room_name]['clients'].items():
             if client_id != self.channel_name:  # Skip checking collision with the snake itself
                 if (head_x, head_y) in client_data['snake']:
-                    return 'other_snake_collision'
+                    return Collisions.OTHER_COLLISION
 
         # Check for collision with game boundaries
         if head_x < 0 or head_x >= CANVAS_WIDTH or head_y < 0 or head_y >= CANVAS_HEIGHT:
-            return 'boundary_collision'
+            return Collisions.BOUNDARY_COLLISION
 
-        return 'no_collision'
+        return Collisions.NO_COLLISION

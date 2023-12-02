@@ -13,6 +13,7 @@
         <link href="{% static 'css/main.css' %}" rel="stylesheet" type="text/css">
     </head>
     <body>
+        <!-- Navbar -->
         <nav class="navbar sticky-top shadow-sm">
             <div class="container-fluid">
                 <button class="navbar-toggler" type="button" data-bs-toggle="offcanvas" data-bs-target="#offcanvasNavbar" aria-controls="offcanvasNavbar">
@@ -43,6 +44,8 @@
                 </div>
             </div>
         </nav>
+
+        <!-- Room name input modal  -->
         <div class="modal fade" id="promptRoomModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
             <div class="modal-dialog modal-dialog-centered modal-sm">
                 <div class="modal-content">
@@ -59,6 +62,24 @@
                 </div>
             </div>
         </div>
+
+        <!-- Game over modal  -->
+        <div class="modal fade" id="gameOverModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered modal-sm">
+                <div class="modal-content">
+                    <div class="modal-body">
+                        <div class="mb-3 text-center">
+                            <h3 >Game Over</h3>
+                            <p id="gameovermessage">Collided</p>
+                            <br>
+                            <button id="gameOverExit" type="button" class="btn btn-primary" data-bs-toggle="modal">Exit</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Username input modal -->
         <div class="modal fade" id="promptUserModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
             <div class="modal-dialog modal-dialog-centered modal-sm">
                 <div class="modal-content">
@@ -75,23 +96,34 @@
                 </div>
             </div>
         </div>
+
+        <!-- Game canvas  -->
         <div class="container text-center mt-4 p-4">
             <canvas class="border border-dark-subtle shadow" id="snakeCanvas" width="800" height="600" style="margin: auto; background-color: white;"></canvas>
         </div>
+        
+        <!-- Buttons below canvas -->
         <div class="container text-center mt-4 p-4">
             <button id="promptRoom" type="button" class="btn btn-primary btn-lg" data-bs-toggle="modal" data-bs-target="#promptRoomModal">Play!</button>
             <button id="restartButton" type="button" class="btn btn-primary btn-lg" data-bs-toggle="modal" data-bs-target="#promptRoomModal" hidden>Restart!</button>
         </div>
+
+
         <script>
             const canvas = document.getElementById("snakeCanvas");
             const ctx = canvas.getContext("2d");
             const gridSize = 20;
+            const updateInterval = 100;
+            
             let socket;
             let user;
             let room;
             let data;
+            let animationID;
             let start = false;
-            let currentState;
+            var currentState;
+            var lastState;
+            var lastUpdateTime;
 
             // Connect to websocket server
             if (window.location.hostname == "rahmantoks.com"){
@@ -126,10 +158,14 @@
                 } else if (data.type == "game_over") {
                     if (data.username == user){
                         socket.close();
-                        alert(data.message);
+                        cancelAnimationFrame(animationID);     
+                        showGameOver(data.message);
+                        //alert(data.message);
                     }
                 } else {
+                    lastState = currentState;
                     currentState = data;
+                    lastUpdateTime = performance.now();
                     //drawGame(data);
                 };
             }
@@ -145,7 +181,6 @@
 
             function drawGame(data) {
                 ctx.clearRect(0, 0, canvas.width, canvas.height);
-                console.log(data);
                 // Draw each client's snake
                 Object.values(data.clients).forEach((client) => {
                     ctx.fillStyle = "green";
@@ -179,17 +214,47 @@
             }
             
             // Function to update and render the game state
-            function updateAndRender() {
+            function updateAndRender(currentTime) {
                 // In a real scenario, this is where you would receive the game state from the server
                 // and update the currentGameState variable accordingly.
                 // const currentGameState = {...initialGameS tate };  // Simulated update
                 if(currentState != undefined){
+                    const elapsed = currentTime - lastUpdateTime;
+
+                    for (let i=0; i < currentState.clients.length; i++){
+                        const interpolationFactor = elapsed / updateInterval;
+                        interpolateSnakePosition(currentState.clients[i].snake, lastState.clients[i].snake, interpolationFactor);
+                    }
+                    
                     // Draw the current game state
                     drawGame(currentState);    
+
+                    lastUpdateTime = currentTime;
                 }
 
                 // Request the next animation frame
-                requestAnimationFrame(updateAndRender);
+                animationID = requestAnimationFrame(updateAndRender);
+            }
+
+
+            // Function to interpolate the snake's position
+            function interpolateSnakePosition(currentSnake, lastSnake, interpolationFactor) {
+                // Perform linear interpolation for each body segment
+                for (let i = 1; i < currentSnake.length; i++) {
+                    currentSnake[i][0] = lerp(lastSnake[i][0], currentSnake[i][0], interpolationFactor);
+                    currentSnake[i][1] = lerp(lastSnake[i][1], currentSnake[i][1], interpolationFactor);
+                }
+            }
+
+            // Linear interpolation function
+            function lerp(a, b, t) {
+                return a + t * (b - a);
+            }
+
+            function showGameOver(message){
+                document.getElementById("gameovermessage").textContent = message;
+                const modal = new bootstrap.Modal('#gameOverModal');
+                modal.show();
             }
 
             $(document).ready(function(){
