@@ -10,6 +10,7 @@ class Author(models.Model):
     def __str__(self):
         return self.user.get_username()
 
+
 class Category(models.Model):
     title = models.CharField(max_length=20)
     explanation = models.TextField()

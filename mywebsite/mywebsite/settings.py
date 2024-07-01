@@ -64,6 +64,7 @@ INSTALLED_APPS = [
     'blog',
     'gallery',
     'snake',
+    'projects',
     'channels',
 ]
 
