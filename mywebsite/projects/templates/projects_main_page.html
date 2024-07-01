@@ -2,21 +2,34 @@
 {% load static %}
 
 {% block content %}
+<style>
+    .card:hover {
+        box-shadow: 5px 5px 30px rgba(0, 0, 0, 0.2);
+        transition: box-shadow 0.3s ease-in-out;
+        cursor: pointer;
+    }
+    .card-link {
+        text-decoration: none;
+        color: inherit;
+    }
+</style>
 <div class="container my-5">
     <h1 class="text-center mb-4">My Project Showcase</h1>
     <div class="row">
         {% for project in projects %}
         <div class="col-md-4 mb-4">
-            <div class="card">
+            <a href="../{{ project.url }}" class="card-link">
+            <div class="card" >
                 <img src="{{ project.image.image.url }}" class="card-img-top" alt="{{ project.title }}">
                 <div class="card-body">
                     <h5 class="card-title">{{ project.title }}</h5>
                     <p class="card-text">{{ project.description }}</p>
-                    <a href="{{ project.url }}" class="btn btn-primary">View Project</a>
                 </div>
             </div>
+            </a>
         </div>
         {% endfor %}
     </div>
 </div>
+
 {% endblock content %}
