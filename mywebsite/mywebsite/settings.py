@@ -42,7 +42,7 @@ if os.environ.get("DEBUG") == "False":
     SECURE_SSL_REDIRECT=True
 else:
     DEBUG = True
-    ALLOWED_HOSTS = ['192.168.10.109']
+    ALLOWED_HOSTS = ['192.168.0.40']
     DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.sqlite3',
